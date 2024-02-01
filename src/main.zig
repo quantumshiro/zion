@@ -18,6 +18,23 @@ pub const quaternion = struct {
             .k = 0.0,
         };
     }
+
+    // quaternion norm
+    pub fn norm(q: quaternion) f32 {
+        return q.x * q.x + q.i * q.i + q.j * q.j + q.k * q.k;
+    }
+
+    // inverse
+    pub fn inverse() quaternion {
+        const n = quaternion.norm(this);
+        const conj = quaternion.conjugate(this);
+        return quaternion{
+            .x = conj.x / (n * n),
+            .i = conj.i / (n * n),
+            .j = conj.j / (n * n),
+            .k = conj.k / (n * n),
+        };
+    }
 };
 
 // quaternion multiplications
@@ -58,9 +75,4 @@ pub fn conjugate(q: quaternion) quaternion {
         .j = -q.j,
         .k = -q.k,
     };
-}
-
-// quaternion norm
-pub fn norm(q: quaternion) f32 {
-    return q.x * q.x + q.i * q.i + q.j * q.j + q.k * q.k;
 }
