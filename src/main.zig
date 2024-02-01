@@ -19,6 +19,16 @@ pub const quaternion = struct {
         };
     }
 
+    // quaternion conjugate
+    pub fn conjugate(q: quaternion) quaternion {
+        return quaternion{
+            .x = q.x,
+            .i = -q.i,
+            .j = -q.j,
+            .k = -q.k,
+        };
+    }
+
     // quaternion norm
     pub fn norm(q: quaternion) f32 {
         return q.x * q.x + q.i * q.i + q.j * q.j + q.k * q.k;
@@ -64,15 +74,5 @@ pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
         .i = lhs.i - rhs.i,
         .j = lhs.j - rhs.j,
         .k = lhs.k - rhs.k,
-    };
-}
-
-// quaternion conjugate
-pub fn conjugate(q: quaternion) quaternion {
-    return quaternion{
-        .x = q.x,
-        .i = -q.i,
-        .j = -q.j,
-        .k = -q.k,
     };
 }
