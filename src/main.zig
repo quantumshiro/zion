@@ -49,3 +49,8 @@ pub fn conjugate(q: quaternion) quaternion {
         .k = -q.k,
     };
 }
+
+// quaternion norm
+pub fn norm(q: quaternion) f32 {
+    return q.x * q.x + q.i * q.i + q.j * q.j + q.k * q.k;
+}
