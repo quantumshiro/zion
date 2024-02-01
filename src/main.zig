@@ -29,3 +29,13 @@ pub fn add(lhs: quaternion, rhs: quaternion) quaternion {
         .k = lhs.k + rhs.k,
     };
 }
+
+// quaternion subtraction
+pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
+    return quaternion{
+        .x = lhs.x - rhs.x,
+        .i = lhs.i - rhs.i,
+        .j = lhs.j - rhs.j,
+        .k = lhs.k - rhs.k,
+    };
+}
