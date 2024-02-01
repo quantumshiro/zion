@@ -86,3 +86,13 @@ test "quaternion addition" {
     try testing.expect(c.j == 10.0);
     try testing.expect(c.k == 12.0);
 }
+
+test "quaternion subtraction" {
+    const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const b = quaternion{ .x = 5.0, .i = 6.0, .j = 7.0, .k = 8.0 };
+    const c = sub(a, b);
+    try testing.expect(c.x == -4.0);
+    try testing.expect(c.i == -4.0);
+    try testing.expect(c.j == -4.0);
+    try testing.expect(c.k == -4.0);
+}
