@@ -76,3 +76,13 @@ pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
         .k = lhs.k - rhs.k,
     };
 }
+
+test "quaternion addition" {
+    const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const b = quaternion{ .x = 5.0, .i = 6.0, .j = 7.0, .k = 8.0 };
+    const c = add(a, b);
+    try testing.expect(c.x == 6.0);
+    try testing.expect(c.i == 8.0);
+    try testing.expect(c.j == 10.0);
+    try testing.expect(c.k == 12.0);
+}
