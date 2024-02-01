@@ -96,3 +96,9 @@ test "quaternion subtraction" {
     try testing.expect(c.j == -4.0);
     try testing.expect(c.k == -4.0);
 }
+
+test "quaternion norm" {
+    const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const n = quaternion.norm(a);
+    try testing.expect(n == 30.0);
+}
