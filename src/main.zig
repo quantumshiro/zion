@@ -39,3 +39,13 @@ pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
         .k = lhs.k - rhs.k,
     };
 }
+
+// quaternion conjugate
+pub fn conjugate(q: quaternion) quaternion {
+    return quaternion{
+        .x = q.x,
+        .i = -q.i,
+        .j = -q.j,
+        .k = -q.k,
+    };
+}
