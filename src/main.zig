@@ -8,6 +8,16 @@ pub const quaternion = struct {
     i: f32,
     j: f32,
     k: f32,
+
+    // unit
+    pub fn unit() quaternion {
+        return quaternion{
+            .x = 1.0,
+            .i = 0.0,
+            .j = 0.0,
+            .k = 0.0,
+        };
+    }
 };
 
 // quaternion multiplications
