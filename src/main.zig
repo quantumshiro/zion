@@ -19,3 +19,13 @@ pub fn mul(lhs: quaternion, rhs: quaternion) quaternion {
         .k = lhs.k * rhs.k - lhs.x * rhs.x - lhs.i * rhs.i - lhs.j * rhs.j,
     };
 }
+
+// quaternion addition
+pub fn add(lhs: quaternion, rhs: quaternion) quaternion {
+    return quaternion{
+        .x = lhs.x + rhs.x,
+        .i = lhs.i + rhs.i,
+        .j = lhs.j + rhs.j,
+        .k = lhs.k + rhs.k,
+    };
+}
