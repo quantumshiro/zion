@@ -9,6 +9,14 @@ pub const quaternion = struct {
     j: f32,
     k: f32,
 
+    pub fn init(x: f32, i: f32, j: f32, k: f32) quaternion {
+        return quaternion{
+            .x = x,
+            .i = i,
+            .j = j,
+            .k = k,
+        };
+    }
     // unit
     pub fn unit() quaternion {
         return quaternion{
