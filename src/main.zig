@@ -38,9 +38,9 @@ pub const quaternion = struct {
     }
 
     // inverse
-    pub fn inverse() quaternion {
-        const n = quaternion.norm(this);
-        const conj = quaternion.conjugate(this);
+    pub fn inverse(self: this) quaternion {
+        const n = self.norm();
+        const conj = self.conjugate();
         return quaternion{
             .x = conj.x / (n * n),
             .i = conj.i / (n * n),
@@ -98,6 +98,25 @@ test "quaternion norm" {
     const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
     const n = q.norm();
     try testing.expect(n == 30.0);
+}
+
+test "quaternion conjugate" {
+    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const c = q.conjugate();
+    try testing.expect(c.x == 1.0);
+    try testing.expect(c.i == -2.0);
+    try testing.expect(c.j == -3.0);
+    try testing.expect(c.k == -4.0);
+}
+
+test "quaternion inverse" {
+    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const c = q.inverse();
+    const n = q.norm();
+    try testing.expect(c.x == 1.0 / (n * n));
+    try testing.expect(c.i == -2.0 / (n * n));
+    try testing.expect(c.j == -3.0 / (n * n));
+    try testing.expect(c.k == -4.0 / (n * n));
 }
 
 test "quaternion addition" {
