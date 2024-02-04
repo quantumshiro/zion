@@ -9,17 +9,6 @@ pub const quaternion = struct {
 
     const this = @This();
 
-    // init
-    // sample usage: quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 }
-    pub fn init(x: f32, i: f32, j: f32, k: f32) quaternion {
-        return quaternion{
-            .x = x,
-            .i = i,
-            .j = j,
-            .k = k,
-        };
-    }
-
     // unit
     // sample usage: quaternion.unit()
     pub fn unit() quaternion {
