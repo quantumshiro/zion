@@ -32,12 +32,13 @@ pub const quaternion = struct {
     }
 
     // quaternion conjugate
-    pub fn conjugate(q: quaternion) quaternion {
+    // sample usage: var q = quaternion.init(1.0, 2.0, 3.0, 4.0).conjugate()
+    pub fn conjugate(self: this) quaternion {
         return quaternion{
-            .x = q.x,
-            .i = -q.i,
-            .j = -q.j,
-            .k = -q.k,
+            .x = self.x,
+            .i = -self.i,
+            .j = -self.j,
+            .k = -self.k,
         };
     }
 
