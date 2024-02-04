@@ -34,7 +34,7 @@ pub const quaternion = struct {
     // quaternion norm
     // sample usage: var n = quaternion.init(1.0, 2.0, 3.0, 4.0).norm()
     pub fn norm(self: this) f32 {
-        return self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k;
+        return @sqrt(self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k);
     }
 
     // inverse
@@ -97,7 +97,7 @@ test "quaternion unit" {
 test "quaternion norm" {
     const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
     const n = q.norm();
-    try testing.expect(n == 30.0);
+    try testing.expect(n == @sqrt(30.0));
 }
 
 test "quaternion conjugate" {
