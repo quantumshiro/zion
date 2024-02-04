@@ -53,10 +53,10 @@ pub const quaternion = struct {
 // quaternion multiplications
 pub fn mul(lhs: quaternion, rhs: quaternion) quaternion {
     return quaternion{
-        .x = lhs.i * rhs.j - lhs.j * rhs.i + lhs.k * rhs.x + lhs.k * rhs.x,
-        .i = lhs.j * rhs.x - lhs.x * rhs.j + lhs.k * rhs.i + lhs.k * rhs.i,
-        .j = lhs.x * rhs.i - lhs.i * rhs.x + lhs.k * rhs.j + lhs.k * rhs.j,
-        .k = lhs.k * rhs.k - lhs.x * rhs.x - lhs.i * rhs.i - lhs.j * rhs.j,
+        .x = lhs.x * rhs.x - lhs.i * rhs.i - lhs.j * rhs.j - lhs.k * rhs.k,
+        .i = lhs.x * rhs.i + lhs.i * rhs.x + lhs.j * rhs.k - lhs.k * rhs.j,
+        .j = lhs.x * rhs.j - lhs.i * rhs.k + lhs.j * rhs.x + lhs.k * rhs.i,
+        .k = lhs.x * rhs.k + lhs.i * rhs.j - lhs.j * rhs.i + lhs.k * rhs.x,
     };
 }
 
@@ -95,7 +95,7 @@ test "quaternion unit" {
 }
 
 test "quaternion norm" {
-    const q = quaternion.init(1.0, 2.0, 3.0, 4.0);
+    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
     const n = q.norm();
     try testing.expect(n == 30.0);
 }
@@ -118,4 +118,14 @@ test "quaternion subtraction" {
     try testing.expect(c.i == -4.0);
     try testing.expect(c.j == -4.0);
     try testing.expect(c.k == -4.0);
+}
+
+test "qaternion multiplication" {
+    const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    const b = quaternion{ .x = 7.0, .i = 6.0, .j = 7.0, .k = 8.0 };
+    const c = mul(a, b);
+    try testing.expect(c.x == -58.0);
+    try testing.expect(c.i == 16.0);
+    try testing.expect(c.j == 36.0);
+    try testing.expect(c.k == 32.0);
 }
