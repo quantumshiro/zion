@@ -71,6 +71,12 @@ pub fn mul(lhs: quaternion, rhs: quaternion) quaternion {
     };
 }
 
+// quaternion division
+// hls/rhs
+pub fn div(lhs: quaternion, rhs: quaternion) quaternion {
+    return mul(lhs, rhs.inverse());
+}
+
 // quaternion addition
 pub fn add(lhs: quaternion, rhs: quaternion) quaternion {
     return quaternion{
