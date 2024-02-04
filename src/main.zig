@@ -1,14 +1,16 @@
 const std = @import("std");
 const testing = std.testing;
 
-const this = @This();
-
 pub const quaternion = struct {
     x: f32,
     i: f32,
     j: f32,
     k: f32,
 
+    const this = @This();
+
+    // init
+    // sample usage: quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 }
     pub fn init(x: f32, i: f32, j: f32, k: f32) quaternion {
         return quaternion{
             .x = x,
@@ -17,7 +19,9 @@ pub const quaternion = struct {
             .k = k,
         };
     }
+
     // unit
+    // sample usage: quaternion.unit()
     pub fn unit() quaternion {
         return quaternion{
             .x = 1.0,
@@ -38,8 +42,9 @@ pub const quaternion = struct {
     }
 
     // quaternion norm
-    pub fn norm(q: quaternion) f32 {
-        return q.x * q.x + q.i * q.i + q.j * q.j + q.k * q.k;
+    // sample usage: var n = quaternion.init(1.0, 2.0, 3.0, 4.0).norm()
+    pub fn norm(self: this) f32 {
+        return self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k;
     }
 
     // inverse
@@ -85,6 +90,20 @@ pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
     };
 }
 
+test "quaternion unit" {
+    const q = quaternion.unit();
+    try testing.expect(q.x == 1.0);
+    try testing.expect(q.i == 0.0);
+    try testing.expect(q.j == 0.0);
+    try testing.expect(q.k == 0.0);
+}
+
+test "quaternion norm" {
+    const q = quaternion.init(1.0, 2.0, 3.0, 4.0);
+    const n = q.norm();
+    try testing.expect(n == 30.0);
+}
+
 test "quaternion addition" {
     const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
     const b = quaternion{ .x = 5.0, .i = 6.0, .j = 7.0, .k = 8.0 };
@@ -103,10 +122,4 @@ test "quaternion subtraction" {
     try testing.expect(c.i == -4.0);
     try testing.expect(c.j == -4.0);
     try testing.expect(c.k == -4.0);
-}
-
-test "quaternion norm" {
-    const a = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
-    const n = quaternion.norm(a);
-    try testing.expect(n == 30.0);
 }
