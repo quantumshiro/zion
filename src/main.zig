@@ -230,14 +230,15 @@ pub fn to_matrix(q: quaternion) matrix {
 //     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
 //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
 //     0                     0                     0                    1
+fn trace(m: matrix) f32 {
+    return m.m11 + m.m22 + m.m33 + m.m44;
+}
+
 pub fn from_matrix(m: matrix) quaternion {
-    fn trace(m: matrix) f32 {
-        return m.m11 + m.m22 + m.m33 + m.m44;
-    }
-    return quaternion {
-        .x = 1/2 * @sqrt(trace(m)),
-        .i = 1/2 * @sqrt(m.m11 - m.m22 - m.m33 + m.m44),
-        .j = 1/2 * @sqrt(-m.m11 + m.m22 - m.m33 + m.m44),
-        .k = 1/2 * @sqrt(-m.m11 - m.m22 + m.m33 + m.m44),
-    }
+    return quaternion{
+        .x = 1 / 2 * @sqrt(trace(m)),
+        .i = 1 / 2 * @sqrt(m.m11 - m.m22 - m.m33 + m.m44),
+        .j = 1 / 2 * @sqrt(-m.m11 + m.m22 - m.m33 + m.m44),
+        .k = 1 / 2 * @sqrt(-m.m11 - m.m22 + m.m33 + m.m44),
+    };
 }
