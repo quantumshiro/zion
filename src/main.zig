@@ -170,3 +170,57 @@ pub fn from_axis_angle(q: axis, angle: f32) quaternion {
         };
     }
 }
+
+const matrix = struct {
+    m11: f32,
+    m12: f32,
+    m13: f32,
+    m14: f32,
+    m21: f32,
+    m22: f32,
+    m23: f32,
+    m24: f32,
+    m31: f32,
+    m32: f32,
+    m33: f32,
+    m34: f32,
+    m41: f32,
+    m42: f32,
+    m43: f32,
+    m44: f32,
+};
+
+// 単位四元数から回転行列を生成
+pub fn to_matrix(q: quaternion) matrix {
+    const x2 = q.x + q.x;
+    const y2 = q.i + q.i;
+    const z2 = q.j + q.j;
+    const xx = q.x * x2;
+    const xy = q.x * y2;
+    const xz = q.x * z2;
+    const yy = q.i * y2;
+    const yz = q.i * z2;
+    const zz = q.j * z2;
+    const wx = q.x * q.k;
+    const wy = q.i * q.k;
+    const wz = q.j * q.k;
+
+    return matrix{
+        .m11 = 1.0 - (yy + zz),
+        .m12 = xy - wz,
+        .m13 = xz + wy,
+        .m14 = 0.0,
+        .m21 = xy + wz,
+        .m22 = 1.0 - (xx + zz),
+        .m23 = yz - wx,
+        .m24 = 0.0,
+        .m31 = xz - wy,
+        .m32 = yz + wx,
+        .m33 = 1.0 - (xx + yy),
+        .m34 = 0.0,
+        .m41 = 0.0,
+        .m42 = 0.0,
+        .m43 = 0.0,
+        .m44 = 1.0,
+    };
+}
