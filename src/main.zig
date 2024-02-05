@@ -148,3 +148,25 @@ test "qaternion multiplication" {
     try testing.expect(c.j == 36.0);
     try testing.expect(c.k == 32.0);
 }
+
+const axis = struct {
+    x: f32,
+    y: f32,
+    z: f32,
+};
+
+// 回転軸と角度から単位四元数を生成
+// axis: 回転軸 (x, y, z)
+// angle: 回転角度 angle
+pub fn from_axis_angle(q: axis, angle: f32) quaternion {
+    var l: f32 = q.x + q.x + q.y + q.y + q.z + q.z;
+    if (l != 0.0) {
+        var s: f32 = @sin(angle * 0.5) / @sqrt(l);
+        return quaternion{
+            .x = q.x * s,
+            .i = q.y * s,
+            .j = q.z * s,
+            .k = @cos(angle),
+        };
+    }
+}
