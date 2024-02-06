@@ -158,17 +158,18 @@ const axis = struct {
 // 回転軸と角度から単位四元数を生成
 // axis: 回転軸 (x, y, z)
 // angle: 回転角度 angle
-pub fn from_axis_angle(q: axis, angle: f32) quaternion {
+pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
     var l: f32 = q.x + q.x + q.y + q.y + q.z + q.z;
+    var s: f32 = undefined;
     if (l != 0.0) {
-        var s: f32 = @sin(angle * 0.5) / @sqrt(l);
-        return quaternion{
-            .x = q.x * s,
-            .i = q.y * s,
-            .j = q.z * s,
-            .k = @cos(angle),
-        };
+        s = @sin(angle * 0.5) / @sqrt(l);
     }
+    return quaternion{
+        .x = @cos(angle),
+        .i = q.x * s,
+        .j = q.y * s,
+        .k = q.z * s,
+    };
 }
 
 const matrix = struct {
