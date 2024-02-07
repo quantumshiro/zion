@@ -235,11 +235,12 @@ fn trace(m: matrix) f32 {
 }
 
 pub fn from_matrix(m: matrix) quaternion {
+    var x = 1 / 2 * @sqrt(trace(m));
     return quaternion{
-        .x = 1 / 2 * @sqrt(trace(m)),
-        .i = 1 / 2 * @sqrt(m.m11 - m.m22 - m.m33 + m.m44),
-        .j = 1 / 2 * @sqrt(-m.m11 + m.m22 - m.m33 + m.m44),
-        .k = 1 / 2 * @sqrt(-m.m11 - m.m22 + m.m33 + m.m44),
+        .x = x,
+        .i = (m.m32 - m.m23) / (4 * x),
+        .j = (m.m13 - m.m31) / (4 * x),
+        .k = (m.m21 - m.m12) / (4 * x),
     };
 }
 
