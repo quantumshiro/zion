@@ -328,4 +328,8 @@ pub const polynoimal = struct {
             .coefficients = coefficients,
         };
     }
+
+    pub fn set(self: *polynoimal, index: usize, value: quaternion) void {
+        self.coefficients[index] = value;
+    }
 };
