@@ -344,9 +344,9 @@ pub const polynomial = struct {
     }
 
     pub fn evaluate(self: this, x: quaternion) quaternion {
-        var result = quaternion.unit();
-        for (self.coefficients, 0..self.coefficients.len) |coeff, i| {
-            result = add(result, mul(coeff, pow(x, i)));
+        var result = quaternion{ .x = 0.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+        for (self.coefficients, 0..self.coefficients.len) |c, i| {
+            result = add(result, mul(c, polynomial.pow(x, i)));
         }
         return result;
     }
