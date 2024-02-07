@@ -1,5 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
+const assert = std.debug.assert;
 
 pub const quaternion = struct {
     x: f32,
@@ -248,4 +249,52 @@ test "quaternion from axis angle" {
     try testing.expect(q.i == @sin(std.math.pi / 4.0));
     try testing.expect(q.j == 0.0);
     try testing.expect(q.k == 0.0);
+}
+
+test "to_matrix function" {
+    var q = quaternion{
+        .x = 0.0,
+        .i = 0.0,
+        .j = 0.0,
+        .k = 1.0,
+    };
+
+    var m = to_matrix(q);
+
+    var expected = matrix{
+        .m11 = 1.0,
+        .m12 = 0.0,
+        .m13 = 0.0,
+        .m14 = 0.0,
+        .m21 = 0.0,
+        .m22 = 1.0,
+        .m23 = 0.0,
+        .m24 = 0.0,
+        .m31 = 0.0,
+        .m32 = 0.0,
+        .m33 = 1.0,
+        .m34 = 0.0,
+        .m41 = 0.0,
+        .m42 = 0.0,
+        .m43 = 0.0,
+        .m44 = 1.0,
+    };
+
+    // 実際の結果が期待される結果と一致することを確認します。
+    assert(m.m11 == expected.m11);
+    assert(m.m12 == expected.m12);
+    assert(m.m13 == expected.m13);
+    assert(m.m14 == expected.m14);
+    assert(m.m21 == expected.m21);
+    assert(m.m22 == expected.m22);
+    assert(m.m23 == expected.m23);
+    assert(m.m24 == expected.m24);
+    assert(m.m31 == expected.m31);
+    assert(m.m32 == expected.m32);
+    assert(m.m33 == expected.m33);
+    assert(m.m34 == expected.m34);
+    assert(m.m41 == expected.m41);
+    assert(m.m42 == expected.m42);
+    assert(m.m43 == expected.m43);
+    assert(m.m44 == expected.m44);
 }
