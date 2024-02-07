@@ -319,42 +319,53 @@ test "to_matrix function" {
     assert(m.m44 == expected.m44);
 }
 
-pub const polynoimal = struct {
+pub const polynomial = struct {
     coefficients: []quaternion,
 
     const this = @This();
 
-    pub fn init(allocator: *std.mem.Allocator, degree: usize) !polynoimal {
+    pub fn init(allocator: *std.mem.Allocator, degree: usize) !polynomial {
         const coefficients = try allocator.alloc(quaternion, degree + 1);
-        return polynoimal{
+        return polynomial{
             .coefficients = coefficients,
         };
     }
 
-    pub fn set(self: *polynoimal, index: usize, value: quaternion) void {
+    pub fn set(self: *polynomial, index: usize, value: quaternion) void {
         self.coefficients[index] = value;
     }
 
     pub fn pow(x: quaternion, n: usize) quaternion {
         var result = quaternion.unit();
-        var tmpBase = x;
-        var exp = n;
-
-        while (exp > 0) {
-            if (exp & 1) {
-                result = mul(result, tmpBase);
-            }
-            tmpBase = mul(tmpBase, tmpBase);
-            exp >>= 1;
+        for (0..n) |_| {
+            result = mul(result, x);
         }
         return result;
     }
 
     pub fn evaluate(self: this, x: quaternion) quaternion {
         var result = quaternion.unit();
-        for (self.coefficients, self.coefficients) |coeff, i| {
-            result = add(result, mul(coeff, self.pow(x, i)));
+        for (self.coefficients, 0..self.coefficients.len) |coeff, i| {
+            result = add(result, mul(coeff, pow(x, i)));
         }
         return result;
     }
 };
+
+test "polynomial evaluation" {
+    var allocator = std.heap.page_allocator;
+    var p = try polynomial.init(&allocator, 3); // 3次の多項式を初期化
+
+    // 係数をセット（例：x^3 + 2x^2 + 3x + 4）
+    p.set(0, quaternion{ .x = 4.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(1, quaternion{ .x = 3.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(2, quaternion{ .x = 2.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(3, quaternion{ .x = 1.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+
+    // x = 1 で多項式を評価
+    var x = quaternion{ .x = 1.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+    var result = p.evaluate(x);
+
+    // 期待される結果は 10（1^3 + 2*1^2 + 3*1 + 4）
+    try testing.expectEqual(quaternion{ .x = 10.0, .i = 0.0, .j = 0.0, .k = 0.0 }, result);
+}
