@@ -1,5 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
+const assert = std.debug.assert;
 
 pub const quaternion = struct {
     x: f32,
@@ -46,6 +47,45 @@ pub const quaternion = struct {
             .i = conj.i / (n * n),
             .j = conj.j / (n * n),
             .k = conj.k / (n * n),
+        };
+    }
+
+    // 単位四元数から回転行列を生成
+    // M = 1 - 2(q_j^2 + q_k^2)  2(q_iq_j - q_kq_r)    2(q_iq_k + q_jq_r)   0
+    //     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
+    //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
+    //     0                     0                     0                    1
+    pub fn to_matrix(self: this) matrix {
+        const x2 = self.x + self.x;
+        const y2 = self.i + self.i;
+        const z2 = self.j + self.j;
+        const xx = self.x * x2;
+        const xy = self.x * y2;
+        const xz = self.x * z2;
+        const yy = self.i * y2;
+        const yz = self.i * z2;
+        const zz = self.j * z2;
+        const wx = self.x * self.k;
+        const wy = self.i * self.k;
+        const wz = self.j * self.k;
+
+        return matrix{
+            .m11 = 1.0 - (yy + zz),
+            .m12 = xy - wz,
+            .m13 = xz + wy,
+            .m14 = 0.0,
+            .m21 = xy + wz,
+            .m22 = 1.0 - (xx + zz),
+            .m23 = yz - wx,
+            .m24 = 0.0,
+            .m31 = xz - wy,
+            .m32 = yz + wx,
+            .m33 = 1.0 - (xx + yy),
+            .m34 = 0.0,
+            .m41 = 0.0,
+            .m42 = 0.0,
+            .m43 = 0.0,
+            .m44 = 1.0,
         };
     }
 };
@@ -147,4 +187,134 @@ test "qaternion multiplication" {
     try testing.expect(c.i == 16.0);
     try testing.expect(c.j == 36.0);
     try testing.expect(c.k == 32.0);
+}
+
+pub const axis = struct {
+    x: f32,
+    y: f32,
+    z: f32,
+
+    const this = @This();
+
+    // 回転軸と角度から単位四元数を生成
+    // axis: 回転軸 (x, y, z)
+    // angle: 回転角度 angle
+    // pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
+    //     const half_angle = angle / 2;
+    //     const s = @sin(half_angle);
+    //     const c = @cos(half_angle);
+    //     return quaternion{
+    //         .x = c,
+    //         .i = q.x * s,
+    //         .j = q.y * s,
+    //         .k = q.z * s,
+    //     };
+    // }
+    pub fn from_axis_angle(self: this, angle: f32) quaternion {
+        const half_angle = angle / 2;
+        const s = @sin(half_angle);
+        const c = @cos(half_angle);
+        return quaternion{
+            .x = c,
+            .i = self.x * s,
+            .j = self.y * s,
+            .k = self.z * s,
+        };
+    }
+};
+
+fn trace(m: matrix) f32 {
+    return m.m11 + m.m22 + m.m33 + m.m44;
+}
+
+pub const matrix = struct {
+    m11: f32,
+    m12: f32,
+    m13: f32,
+    m14: f32,
+    m21: f32,
+    m22: f32,
+    m23: f32,
+    m24: f32,
+    m31: f32,
+    m32: f32,
+    m33: f32,
+    m34: f32,
+    m41: f32,
+    m42: f32,
+    m43: f32,
+    m44: f32,
+
+    const this = @This();
+
+    // 直行行列から単位四元数を生成
+    // M = 1 - 2(q_j^2 + q_k^2)  2(q_iq_j - q_kq_r)    2(q_iq_k + q_jq_r)   0
+    //     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
+    //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
+    //     0                     0                     0                    1
+    pub fn from_matrix(m: this) quaternion {
+        var x = 1 / 2 * @sqrt(trace(m));
+        return quaternion{
+            .x = x,
+            .i = (m.m32 - m.m23) / (4 * x),
+            .j = (m.m13 - m.m31) / (4 * x),
+            .k = (m.m21 - m.m12) / (4 * x),
+        };
+    }
+};
+
+test "quaternion from axis angle" {
+    const q = axis{ .x = 1.0, .y = 0.0, .z = 0.0 };
+    const r = q.from_axis_angle(std.math.pi / 2.0);
+    try testing.expect(r.x == @cos(std.math.pi / 4.0));
+    try testing.expect(r.i == @sin(std.math.pi / 4.0));
+    try testing.expect(r.j == 0.0);
+    try testing.expect(r.k == 0.0);
+}
+
+test "to_matrix function" {
+    var q = quaternion{
+        .x = 0.0,
+        .i = 0.0,
+        .j = 0.0,
+        .k = 1.0,
+    };
+
+    var m = q.to_matrix();
+
+    var expected = matrix{
+        .m11 = 1.0,
+        .m12 = 0.0,
+        .m13 = 0.0,
+        .m14 = 0.0,
+        .m21 = 0.0,
+        .m22 = 1.0,
+        .m23 = 0.0,
+        .m24 = 0.0,
+        .m31 = 0.0,
+        .m32 = 0.0,
+        .m33 = 1.0,
+        .m34 = 0.0,
+        .m41 = 0.0,
+        .m42 = 0.0,
+        .m43 = 0.0,
+        .m44 = 1.0,
+    };
+
+    assert(m.m11 == expected.m11);
+    assert(m.m12 == expected.m12);
+    assert(m.m13 == expected.m13);
+    assert(m.m14 == expected.m14);
+    assert(m.m21 == expected.m21);
+    assert(m.m22 == expected.m22);
+    assert(m.m23 == expected.m23);
+    assert(m.m24 == expected.m24);
+    assert(m.m31 == expected.m31);
+    assert(m.m32 == expected.m32);
+    assert(m.m33 == expected.m33);
+    assert(m.m34 == expected.m34);
+    assert(m.m41 == expected.m41);
+    assert(m.m42 == expected.m42);
+    assert(m.m43 == expected.m43);
+    assert(m.m44 == expected.m44);
 }
