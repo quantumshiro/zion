@@ -322,6 +322,8 @@ test "to_matrix function" {
 pub const polynoimal = struct {
     coefficients: []quaternion,
 
+    const this = @This();
+
     pub fn init(allocator: *std.mem.Allocator, degree: usize) !polynoimal {
         const coefficients = try allocator.alloc(quaternion, degree + 1);
         return polynoimal{
@@ -331,5 +333,20 @@ pub const polynoimal = struct {
 
     pub fn set(self: *polynoimal, index: usize, value: quaternion) void {
         self.coefficients[index] = value;
+    }
+
+    pub fn pow(x: quaternion, n: usize) quaternion {
+        var result = quaternion.unit();
+        var tmpBase = x;
+        var exp = n;
+
+        while (exp > 0) {
+            if (exp & 1) {
+                result = mul(result, tmpBase);
+            }
+            tmpBase = mul(tmpBase, tmpBase);
+            exp >>= 1;
+        }
+        return result;
     }
 };
