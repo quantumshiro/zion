@@ -281,7 +281,6 @@ test "to_matrix function" {
         .m44 = 1.0,
     };
 
-    // 実際の結果が期待される結果と一致することを確認します。
     assert(m.m11 == expected.m11);
     assert(m.m12 == expected.m12);
     assert(m.m13 == expected.m13);
