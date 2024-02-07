@@ -318,3 +318,14 @@ test "to_matrix function" {
     assert(m.m43 == expected.m43);
     assert(m.m44 == expected.m44);
 }
+
+pub const polynoimal = struct {
+    coefficients: []quaternion,
+
+    pub fn init(allocator: *std.mem.Allocator, degree: usize) !polynoimal {
+        const coefficients = try allocator.alloc(quaternion, degree + 1);
+        return polynoimal{
+            .coefficients = coefficients,
+        };
+    }
+};
