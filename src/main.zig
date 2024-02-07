@@ -349,4 +349,12 @@ pub const polynoimal = struct {
         }
         return result;
     }
+
+    pub fn evaluate(self: this, x: quaternion) quaternion {
+        var result = quaternion.unit();
+        for (self.coefficients, self.coefficients) |coeff, i| {
+            result = add(result, mul(coeff, self.pow(x, i)));
+        }
+        return result;
+    }
 };
