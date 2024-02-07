@@ -159,13 +159,11 @@ const axis = struct {
 // axis: 回転軸 (x, y, z)
 // angle: 回転角度 angle
 pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
-    var l: f32 = q.x + q.x + q.y + q.y + q.z + q.z;
-    var s: f32 = undefined;
-    if (l != 0.0) {
-        s = @sin(angle * 0.5) / @sqrt(l);
-    }
+    const half_angle = angle / 2;
+    const s = @sin(half_angle);
+    const c = @cos(half_angle);
     return quaternion{
-        .x = @cos(angle),
+        .x = c,
         .i = q.x * s,
         .j = q.y * s,
         .k = q.z * s,
@@ -242,4 +240,12 @@ pub fn from_matrix(m: matrix) quaternion {
         .j = 1 / 2 * @sqrt(-m.m11 + m.m22 - m.m33 + m.m44),
         .k = 1 / 2 * @sqrt(-m.m11 - m.m22 + m.m33 + m.m44),
     };
+}
+
+test "quaternion from axis angle" {
+    const q = try from_axis_angle(axis{ .x = 1.0, .y = 0.0, .z = 0.0 }, std.math.pi / 2.0);
+    try testing.expect(q.x == @cos(std.math.pi / 4.0));
+    try testing.expect(q.i == @sin(std.math.pi / 4.0));
+    try testing.expect(q.j == 0.0);
+    try testing.expect(q.k == 0.0);
 }
