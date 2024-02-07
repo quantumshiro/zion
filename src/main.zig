@@ -49,6 +49,45 @@ pub const quaternion = struct {
             .k = conj.k / (n * n),
         };
     }
+
+    // 単位四元数から回転行列を生成
+    // M = 1 - 2(q_j^2 + q_k^2)  2(q_iq_j - q_kq_r)    2(q_iq_k + q_jq_r)   0
+    //     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
+    //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
+    //     0                     0                     0                    1
+    pub fn to_matrix(self: this) matrix {
+        const x2 = self.x + self.x;
+        const y2 = self.i + self.i;
+        const z2 = self.j + self.j;
+        const xx = self.x * x2;
+        const xy = self.x * y2;
+        const xz = self.x * z2;
+        const yy = self.i * y2;
+        const yz = self.i * z2;
+        const zz = self.j * z2;
+        const wx = self.x * self.k;
+        const wy = self.i * self.k;
+        const wz = self.j * self.k;
+
+        return matrix{
+            .m11 = 1.0 - (yy + zz),
+            .m12 = xy - wz,
+            .m13 = xz + wy,
+            .m14 = 0.0,
+            .m21 = xy + wz,
+            .m22 = 1.0 - (xx + zz),
+            .m23 = yz - wx,
+            .m24 = 0.0,
+            .m31 = xz - wy,
+            .m32 = yz + wx,
+            .m33 = 1.0 - (xx + yy),
+            .m34 = 0.0,
+            .m41 = 0.0,
+            .m42 = 0.0,
+            .m43 = 0.0,
+            .m44 = 1.0,
+        };
+    }
 };
 
 // quaternion multiplications
@@ -150,28 +189,45 @@ test "qaternion multiplication" {
     try testing.expect(c.k == 32.0);
 }
 
-const axis = struct {
+pub const axis = struct {
     x: f32,
     y: f32,
     z: f32,
+
+    const this = @This();
+
+    // 回転軸と角度から単位四元数を生成
+    // axis: 回転軸 (x, y, z)
+    // angle: 回転角度 angle
+    // pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
+    //     const half_angle = angle / 2;
+    //     const s = @sin(half_angle);
+    //     const c = @cos(half_angle);
+    //     return quaternion{
+    //         .x = c,
+    //         .i = q.x * s,
+    //         .j = q.y * s,
+    //         .k = q.z * s,
+    //     };
+    // }
+    pub fn from_axis_angle(self: this, angle: f32) quaternion {
+        const half_angle = angle / 2;
+        const s = @sin(half_angle);
+        const c = @cos(half_angle);
+        return quaternion{
+            .x = c,
+            .i = self.x * s,
+            .j = self.y * s,
+            .k = self.z * s,
+        };
+    }
 };
 
-// 回転軸と角度から単位四元数を生成
-// axis: 回転軸 (x, y, z)
-// angle: 回転角度 angle
-pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
-    const half_angle = angle / 2;
-    const s = @sin(half_angle);
-    const c = @cos(half_angle);
-    return quaternion{
-        .x = c,
-        .i = q.x * s,
-        .j = q.y * s,
-        .k = q.z * s,
-    };
+fn trace(m: matrix) f32 {
+    return m.m11 + m.m22 + m.m33 + m.m44;
 }
 
-const matrix = struct {
+pub const matrix = struct {
     m11: f32,
     m12: f32,
     m13: f32,
@@ -188,68 +244,32 @@ const matrix = struct {
     m42: f32,
     m43: f32,
     m44: f32,
+
+    const this = @This();
+
+    // 直行行列から単位四元数を生成
+    // M = 1 - 2(q_j^2 + q_k^2)  2(q_iq_j - q_kq_r)    2(q_iq_k + q_jq_r)   0
+    //     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
+    //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
+    //     0                     0                     0                    1
+    pub fn from_matrix(m: this) quaternion {
+        var x = 1 / 2 * @sqrt(trace(m));
+        return quaternion{
+            .x = x,
+            .i = (m.m32 - m.m23) / (4 * x),
+            .j = (m.m13 - m.m31) / (4 * x),
+            .k = (m.m21 - m.m12) / (4 * x),
+        };
+    }
 };
 
-// 単位四元数から回転行列を生成
-pub fn to_matrix(q: quaternion) matrix {
-    const x2 = q.x + q.x;
-    const y2 = q.i + q.i;
-    const z2 = q.j + q.j;
-    const xx = q.x * x2;
-    const xy = q.x * y2;
-    const xz = q.x * z2;
-    const yy = q.i * y2;
-    const yz = q.i * z2;
-    const zz = q.j * z2;
-    const wx = q.x * q.k;
-    const wy = q.i * q.k;
-    const wz = q.j * q.k;
-
-    return matrix{
-        .m11 = 1.0 - (yy + zz),
-        .m12 = xy - wz,
-        .m13 = xz + wy,
-        .m14 = 0.0,
-        .m21 = xy + wz,
-        .m22 = 1.0 - (xx + zz),
-        .m23 = yz - wx,
-        .m24 = 0.0,
-        .m31 = xz - wy,
-        .m32 = yz + wx,
-        .m33 = 1.0 - (xx + yy),
-        .m34 = 0.0,
-        .m41 = 0.0,
-        .m42 = 0.0,
-        .m43 = 0.0,
-        .m44 = 1.0,
-    };
-}
-
-// 直行行列から単位四元数を生成
-// M = 1 - 2(q_j^2 + q_k^2)  2(q_iq_j - q_kq_r)    2(q_iq_k + q_jq_r)   0
-//     2(q_iq_j + q_kq_r)    1 - 2(q_i^2 + q_k^2)  2(q_jq_k - q_iq_r)   0
-//     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
-//     0                     0                     0                    1
-fn trace(m: matrix) f32 {
-    return m.m11 + m.m22 + m.m33 + m.m44;
-}
-
-pub fn from_matrix(m: matrix) quaternion {
-    var x = 1 / 2 * @sqrt(trace(m));
-    return quaternion{
-        .x = x,
-        .i = (m.m32 - m.m23) / (4 * x),
-        .j = (m.m13 - m.m31) / (4 * x),
-        .k = (m.m21 - m.m12) / (4 * x),
-    };
-}
-
 test "quaternion from axis angle" {
-    const q = try from_axis_angle(axis{ .x = 1.0, .y = 0.0, .z = 0.0 }, std.math.pi / 2.0);
-    try testing.expect(q.x == @cos(std.math.pi / 4.0));
-    try testing.expect(q.i == @sin(std.math.pi / 4.0));
-    try testing.expect(q.j == 0.0);
-    try testing.expect(q.k == 0.0);
+    const q = axis{ .x = 1.0, .y = 0.0, .z = 0.0 };
+    const r = q.from_axis_angle(std.math.pi / 2.0);
+    try testing.expect(r.x == @cos(std.math.pi / 4.0));
+    try testing.expect(r.i == @sin(std.math.pi / 4.0));
+    try testing.expect(r.j == 0.0);
+    try testing.expect(r.k == 0.0);
 }
 
 test "to_matrix function" {
@@ -260,7 +280,7 @@ test "to_matrix function" {
         .k = 1.0,
     };
 
-    var m = to_matrix(q);
+    var m = q.to_matrix();
 
     var expected = matrix{
         .m11 = 1.0,
