@@ -199,17 +199,6 @@ pub const axis = struct {
     // 回転軸と角度から単位四元数を生成
     // axis: 回転軸 (x, y, z)
     // angle: 回転角度 angle
-    // pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
-    //     const half_angle = angle / 2;
-    //     const s = @sin(half_angle);
-    //     const c = @cos(half_angle);
-    //     return quaternion{
-    //         .x = c,
-    //         .i = q.x * s,
-    //         .j = q.y * s,
-    //         .k = q.z * s,
-    //     };
-    // }
     pub fn from_axis_angle(self: this, angle: f32) quaternion {
         const half_angle = angle / 2;
         const s = @sin(half_angle);
