@@ -199,17 +199,6 @@ pub const axis = struct {
     // 回転軸と角度から単位四元数を生成
     // axis: 回転軸 (x, y, z)
     // angle: 回転角度 angle
-    // pub fn from_axis_angle(q: axis, angle: f32) !quaternion {
-    //     const half_angle = angle / 2;
-    //     const s = @sin(half_angle);
-    //     const c = @cos(half_angle);
-    //     return quaternion{
-    //         .x = c,
-    //         .i = q.x * s,
-    //         .j = q.y * s,
-    //         .k = q.z * s,
-    //     };
-    // }
     pub fn from_axis_angle(self: this, angle: f32) quaternion {
         const half_angle = angle / 2;
         const s = @sin(half_angle);
@@ -317,4 +306,69 @@ test "to_matrix function" {
     assert(m.m42 == expected.m42);
     assert(m.m43 == expected.m43);
     assert(m.m44 == expected.m44);
+}
+
+pub const polynomial = struct {
+    coefficients: []quaternion,
+
+    const this = @This();
+
+    pub fn init(allocator: *std.mem.Allocator, degree: usize) !polynomial {
+        const coefficients = try allocator.alloc(quaternion, degree + 1);
+        return polynomial{
+            .coefficients = coefficients,
+        };
+    }
+
+    pub fn set(self: *polynomial, index: usize, value: quaternion) void {
+        self.coefficients[index] = value;
+    }
+
+    pub fn pow(x: quaternion, n: usize) quaternion {
+        var result = quaternion.unit();
+        for (0..n) |_| {
+            result = mul(result, x);
+        }
+        return result;
+    }
+
+    pub fn evaluate(self: this, x: quaternion) quaternion {
+        var result = quaternion{ .x = 0.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+        for (self.coefficients, 0..self.coefficients.len) |c, i| {
+            result = add(result, mul(c, polynomial.pow(x, i)));
+        }
+        return result;
+    }
+};
+
+test "polynomial evaluation" {
+    var allocator = std.heap.page_allocator;
+    var p = try polynomial.init(&allocator, 3); // 3次の多項式を初期化
+
+    // 係数をセット（例：x^3 + 2x^2 + 3x + 4）
+    p.set(0, quaternion{ .x = 4.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(1, quaternion{ .x = 3.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(2, quaternion{ .x = 2.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+    p.set(3, quaternion{ .x = 1.0, .i = 0.0, .j = 0.0, .k = 0.0 });
+
+    // x = 1 で多項式を評価
+    var x = quaternion{ .x = 1.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+    var result = p.evaluate(x);
+
+    // 期待される結果は 10（1^3 + 2*1^2 + 3*1 + 4）
+    try testing.expectEqual(quaternion{ .x = 10.0, .i = 0.0, .j = 0.0, .k = 0.0 }, result);
+
+    var q = try polynomial.init(&allocator, 2); // 2次の多項式を初期化
+
+    // 係数をセット（例：x^2 + x + 1）
+    q.set(0, quaternion.unit());
+    q.set(1, quaternion.unit());
+    q.set(2, quaternion.unit());
+
+    // x = 2 で多項式を評価
+    x = quaternion{ .x = 2.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+    result = q.evaluate(x);
+
+    // 期待される結果は 7（2^2 + 2 + 1）
+    try testing.expectEqual(quaternion{ .x = 7.0, .i = 0.0, .j = 0.0, .k = 0.0 }, result);
 }
