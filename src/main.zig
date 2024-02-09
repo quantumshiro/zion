@@ -357,4 +357,18 @@ test "polynomial evaluation" {
 
     // 期待される結果は 10（1^3 + 2*1^2 + 3*1 + 4）
     try testing.expectEqual(quaternion{ .x = 10.0, .i = 0.0, .j = 0.0, .k = 0.0 }, result);
+
+    var q = try polynomial.init(&allocator, 2); // 2次の多項式を初期化
+
+    // 係数をセット（例：x^2 + x + 1）
+    q.set(0, quaternion.unit());
+    q.set(1, quaternion.unit());
+    q.set(2, quaternion.unit());
+
+    // x = 2 で多項式を評価
+    x = quaternion{ .x = 2.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+    result = q.evaluate(x);
+
+    // 期待される結果は 7（2^2 + 2 + 1）
+    try testing.expectEqual(quaternion{ .x = 7.0, .i = 0.0, .j = 0.0, .k = 0.0 }, result);
 }
