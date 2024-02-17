@@ -242,7 +242,7 @@ pub const matrix = struct {
     //     2(q_iq_k - q_jq_r)    2(q_jq_k + q_iq_r)    1 - 2(q_i^2 + q_j^2) 0
     //     0                     0                     0                    1
     pub fn from_matrix(m: this) quaternion {
-        var x = 1 / 2 * @sqrt(trace(m));
+        const x = 1 / 2 * @sqrt(trace(m));
         return quaternion{
             .x = x,
             .i = (m.m32 - m.m23) / (4 * x),
@@ -269,9 +269,9 @@ test "to_matrix function" {
         .k = 1.0,
     };
 
-    var m = q.to_matrix();
+    const m = q.to_matrix();
 
-    var expected = matrix{
+    const expected = matrix{
         .m11 = 1.0,
         .m12 = 0.0,
         .m13 = 0.0,
