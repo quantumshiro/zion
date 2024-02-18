@@ -3,6 +3,7 @@ const testing = std.testing;
 const assert = std.debug.assert;
 
 const bigInt = std.math.big.int;
+const bigRatinal = std.math.big.Rational;
 
 pub const quaternion = struct {
     x: bigInt.Managed,
@@ -19,15 +20,23 @@ pub const quaternion = struct {
         self.k.deinit();
     }
 
+    pub fn init(x: f32, i: f32, j: f32, k: f32) quaternion {
+        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+        defer arena.deinit();
+        const allocator = arena.allocator();
+
+        return quaternion{
+            .x = bigInt.Managed.initSet(allocator, x),
+            .i = bigInt.Managed.initSet(allocator, i),
+            .j = bigInt.Managed.initSet(allocator, j),
+            .k = bigInt.Managed.initSet(allocator, k),
+        };
+    }
+
     // unit
     // sample usage: quaternion.unit()
     pub fn unit() quaternion {
-        return quaternion{
-            .x = 1.0,
-            .i = 0.0,
-            .j = 0.0,
-            .k = 0.0,
-        };
+        return quaternion.init(1.0, 0.0, 0.0, 0.0);
     }
 
     // quaternion conjugate
@@ -43,8 +52,18 @@ pub const quaternion = struct {
 
     // quaternion norm
     // sample usage: var n = quaternion.init(1.0, 2.0, 3.0, 4.0).norm()
-    pub fn norm(self: this) f32 {
-        return @sqrt(self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k);
+    pub fn norm(self: this) bigInt.Managed {
+        // return @sqrt(self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k);
+        const xx = bigRatinal.mul(self.x, self.x);
+        const ii = bigRatinal.mul(self.i, self.i);
+        const jj = bigRatinal.mul(self.j, self.j);
+        const kk = bigRatinal.mul(self.k, self.k);
+
+        var sum = bigRatinal.add(xx, ii);
+        sum = bigInt.Managed.add(sum, jj);
+        sum = bigInt.Managed.add(sum, kk);
+
+        return bigInt.Managed.sqrt(sum);
     }
 
     // inverse
@@ -137,10 +156,17 @@ pub fn sub(lhs: quaternion, rhs: quaternion) quaternion {
 
 test "quaternion unit" {
     const q = quaternion.unit();
-    try testing.expect(q.x == 1.0);
-    try testing.expect(q.i == 0.0);
-    try testing.expect(q.j == 0.0);
-    try testing.expect(q.k == 0.0);
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const one = bigInt.Managed.initSet(allocator, 1.0);
+    const zero = bigInt.Managed.initSet(allocator, 0.0);
+
+    try testing.expectEqual(one, q.x);
+    try testing.expectEqual(zero, q.i);
+    try testing.expectEqual(zero, q.j);
+    try testing.expectEqual(zero, q.k);
 }
 
 test "quaternion norm" {
