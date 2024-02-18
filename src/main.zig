@@ -2,13 +2,22 @@ const std = @import("std");
 const testing = std.testing;
 const assert = std.debug.assert;
 
+const bigInt = std.math.big.int;
+
 pub const quaternion = struct {
-    x: f32,
-    i: f32,
-    j: f32,
-    k: f32,
+    x: bigInt.Managed,
+    i: bigInt.Managed,
+    j: bigInt.Managed,
+    k: bigInt.Managed,
 
     const this = @This();
+
+    pub fn deinit(self: *this) void {
+        self.x.deinit();
+        self.i.deinit();
+        self.j.deinit();
+        self.k.deinit();
+    }
 
     // unit
     // sample usage: quaternion.unit()
