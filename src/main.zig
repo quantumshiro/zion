@@ -6,10 +6,10 @@ const bigInt = std.math.big.int;
 const bigRatinal = std.math.big.Rational;
 
 pub const quaternion = struct {
-    x: bigInt.Managed,
-    i: bigInt.Managed,
-    j: bigInt.Managed,
-    k: bigInt.Managed,
+    x: bigRatinal,
+    i: bigRatinal,
+    j: bigRatinal,
+    k: bigRatinal,
 
     const this = @This();
 
@@ -20,23 +20,21 @@ pub const quaternion = struct {
         self.k.deinit();
     }
 
-    pub fn init(x: f32, i: f32, j: f32, k: f32) quaternion {
+    // unit
+    // sample usage: quaternion.unit()
+    pub fn unit() quaternion {
         var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
         defer arena.deinit();
         const allocator = arena.allocator();
 
+        const one = try bigRatinal.setInt(allocator, 1.0);
+        const zero = try bigRatinal.setInt(allocator, 0.0);
         return quaternion{
-            .x = bigInt.Managed.initSet(allocator, x),
-            .i = bigInt.Managed.initSet(allocator, i),
-            .j = bigInt.Managed.initSet(allocator, j),
-            .k = bigInt.Managed.initSet(allocator, k),
+            .x = one,
+            .i = zero,
+            .j = zero,
+            .k = zero,
         };
-    }
-
-    // unit
-    // sample usage: quaternion.unit()
-    pub fn unit() quaternion {
-        return quaternion.init(1.0, 0.0, 0.0, 0.0);
     }
 
     // quaternion conjugate
@@ -44,37 +42,76 @@ pub const quaternion = struct {
     pub fn conjugate(self: this) quaternion {
         return quaternion{
             .x = self.x,
-            .i = -self.i,
-            .j = -self.j,
-            .k = -self.k,
+            .i = try bigRatinal.mul(&self.i, -1, &self.i),
+            .j = try bigRatinal.mul(&self.j, -1, &self.j),
+            .k = try bigRatinal.mul(&self.k, -1, &self.k),
         };
     }
 
     // quaternion norm
     // sample usage: var n = quaternion.init(1.0, 2.0, 3.0, 4.0).norm()
-    pub fn norm(self: this) bigInt.Managed {
+    pub fn norm(allocator: *std.mem.Allocator, self: this) bigRatinal {
         // return @sqrt(self.x * self.x + self.i * self.i + self.j * self.j + self.k * self.k);
-        const xx = bigRatinal.mul(self.x, self.x);
-        const ii = bigRatinal.mul(self.i, self.i);
-        const jj = bigRatinal.mul(self.j, self.j);
-        const kk = bigRatinal.mul(self.k, self.k);
 
-        var sum = bigRatinal.add(xx, ii);
-        sum = bigInt.Managed.add(sum, jj);
-        sum = bigInt.Managed.add(sum, kk);
+        // initialize
+        const xx = try bigInt.Managed.init(allocator);
+        const ii = try bigInt.Managed.init(allocator);
+        const jj = try bigInt.Managed.init(allocator);
+        const kk = try bigInt.Managed.init(allocator);
+        var sum = try bigInt.Managed.init(allocator);
+        var ans = try bigInt.Managed.init(allocator);
 
-        return bigInt.Managed.sqrt(sum);
+        // calculate
+        xx = try bigInt.Managed.mul(&xx, &self.x, &self.x);
+        ii = try bigInt.Managed.mul(&ii, &self.i, &self.i);
+        jj = try bigInt.Managed.mul(&jj, &self.j, &self.j);
+        kk = try bigInt.Managed.mul(&kk, &self.k, &self.k);
+
+        sum = try bigInt.Managed.add(&sum, &xx, &ii);
+        sum = try bigInt.Managed.add(&sum, &sum, &jj);
+        sum = try bigInt.Managed.add(&sum, &sum, &kk);
+
+        // conver to bigInt from bigRatinal
+        var sum_copy = try bigRatinal.init(allocator);
+        try bigRatinal.copyInt(&sum_copy, &sum);
+
+        try bigInt.Managed.sqr(&ans, &sum);
+        var ans_copy = try bigRatinal.init(allocator);
+        try bigRatinal.copyInt(&ans_copy, &ans);
+
+        return ans_copy;
     }
 
     // inverse
     pub fn inverse(self: this) quaternion {
+        // allocate memory
+        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+        defer arena.deinit();
+        const allocator = arena.allocator();
+
+        // get quaternion inverse
         const n = self.norm();
         const conj = self.conjugate();
+
+        // initialize
+        var x = try bigInt.Managed.init(allocator);
+        var i = try bigInt.Managed.init(allocator);
+        var j = try bigInt.Managed.init(allocator);
+        var k = try bigInt.Managed.init(allocator);
+
+        var n2 = try bigInt.Managed.init(allocator);
+        n2 = n2.mul(&n, &n);
+
+        x = x.div(&conj.x, &n2);
+        i = i.div(&conj.i, &n2);
+        j = j.div(&conj.j, &n2);
+        k = k.div(&conj.k, &n2);
+
         return quaternion{
-            .x = conj.x / (n * n),
-            .i = conj.i / (n * n),
-            .j = conj.j / (n * n),
-            .k = conj.k / (n * n),
+            .x = x,
+            .i = i,
+            .j = j,
+            .k = k,
         };
     }
 
@@ -170,28 +207,65 @@ test "quaternion unit" {
 }
 
 test "quaternion norm" {
-    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const q = quaternion{ .x = try bigInt.Managed.initSet(allocator, 1.0), .i = try bigInt.Managed.initSet(allocator, 2.0), .j = try bigInt.Managed.initSet(allocator, 3.0), .k = try bigInt.Managed.initSet(allocator, 4.0) };
+
     const n = q.norm();
-    try testing.expect(n == @sqrt(30.0));
+    var expected = try bigInt.Managed.initSet(allocator, 30.0);
+    try bigInt.Managed.sqr(&expected, &expected);
+    try testing.expectEqual(expected, n);
 }
 
 test "quaternion conjugate" {
-    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const q = quaternion{ .x = try bigInt.Managed.initSet(allocator, 1.0), .i = try bigInt.Managed.initSet(allocator, 2.0), .j = try bigInt.Managed.initSet(allocator, 3.0), .k = try bigInt.Managed.initSet(allocator, 4.0) };
     const c = q.conjugate();
-    try testing.expect(c.x == 1.0);
-    try testing.expect(c.i == -2.0);
-    try testing.expect(c.j == -3.0);
-    try testing.expect(c.k == -4.0);
+
+    const expected = quaternion{
+        .x = try bigInt.Managed.initSet(allocator, 1.0),
+        .i = try bigInt.Managed.initSet(allocator, -2.0),
+        .j = try bigInt.Managed.initSet(allocator, -3.0),
+        .k = try bigInt.Managed.initSet(allocator, -4.0),
+    };
+
+    try testing.expectEqual(expected.x, c.x);
+    try testing.expectEqual(expected.i, c.i);
+    try testing.expectEqual(expected.j, c.j);
+    try testing.expectEqual(expected.k, c.k);
 }
 
 test "quaternion inverse" {
-    const q = quaternion{ .x = 1.0, .i = 2.0, .j = 3.0, .k = 4.0 };
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const q = quaternion{ .x = try bigInt.Managed.initSet(allocator, 1.0), .i = try bigInt.Managed.initSet(allocator, 2.0), .j = try bigInt.Managed.initSet(allocator, 3.0), .k = try bigInt.Managed.initSet(allocator, 4.0) };
+
     const c = q.inverse();
     const n = q.norm();
-    try testing.expect(c.x == 1.0 / (n * n));
-    try testing.expect(c.i == -2.0 / (n * n));
-    try testing.expect(c.j == -3.0 / (n * n));
-    try testing.expect(c.k == -4.0 / (n * n));
+
+    const x = try bigInt.Managed.init(allocator);
+    const i = try bigInt.Managed.init(allocator);
+    const j = try bigInt.Managed.init(allocator);
+    const k = try bigInt.Managed.init(allocator);
+
+    var n2 = try bigInt.Managed.init(allocator);
+    try bigInt.Managed.mul(&n2, &n, &n);
+
+    try bigRatinal.div(&x, &c.x, &n2);
+    try bigRatinal.div(&i, &c.i, &n2);
+    try bigRatinal.div(&j, &c.j, &n2);
+    try bigRatinal.div(&k, &c.k, &n2);
+
+    try testing.expectEqual(q.x, x);
+    try testing.expectEqual(q.i, i);
+    try testing.expectEqual(q.j, j);
+    try testing.expectEqual(q.k, k);
 }
 
 test "quaternion addition" {
