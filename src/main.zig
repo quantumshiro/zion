@@ -83,12 +83,7 @@ pub const quaternion = struct {
     }
 
     // inverse
-    pub fn inverse(self: this) quaternion {
-        // allocate memory
-        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-        defer arena.deinit();
-        const allocator = arena.allocator();
-
+    pub fn inverse(allocator: *std.mem.Allocator, self: this) quaternion {
         // get quaternion inverse
         const n = self.norm();
         const conj = self.conjugate();
@@ -197,8 +192,8 @@ test "quaternion unit" {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    const one = bigInt.Managed.initSet(allocator, 1.0);
-    const zero = bigInt.Managed.initSet(allocator, 0.0);
+    const one = try bigRatinal.init(allocator).setInt(1);
+    const zero = try bigRatinal.init(allocator).setInt(0);
 
     try testing.expectEqual(one, q.x);
     try testing.expectEqual(zero, q.i);
@@ -211,12 +206,26 @@ test "quaternion norm" {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const q = quaternion{ .x = try bigInt.Managed.initSet(allocator, 1.0), .i = try bigInt.Managed.initSet(allocator, 2.0), .j = try bigInt.Managed.initSet(allocator, 3.0), .k = try bigInt.Managed.initSet(allocator, 4.0) };
+    // initialize
+    const x = try bigRatinal.init(allocator);
+    const i = try bigRatinal.init(allocator);
+    const j = try bigRatinal.init(allocator);
+    const k = try bigRatinal.init(allocator);
 
+    const q = quaternion{
+        .x = try x.setInt(1),
+        .i = try i.setInt(2),
+        .j = try j.setInt(3),
+        .k = try k.setInt(4),
+    };
     const n = q.norm();
-    var expected = try bigInt.Managed.initSet(allocator, 30.0);
-    try bigInt.Managed.sqr(&expected, &expected);
-    try testing.expectEqual(expected, n);
+    var expected = try bigRatinal.init(allocator).setInt(30);
+    var expect_bigInt = try bigInt.Managed.init(allocator);
+    try bigRatinal.copyInt(&expect_bigInt, &expected);
+
+    expect_bigInt = expect_bigInt.sqr(&expect_bigInt);
+
+    try testing.expectEqual(expect_bigInt, n);
 }
 
 test "quaternion conjugate" {
