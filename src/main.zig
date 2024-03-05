@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 const bigInt = std.math.big.int;
 
 pub const quaternion = struct {
+    allocator: std.mem.Allocator,
     x: bigInt.Managed,
     i: bigInt.Managed,
     j: bigInt.Managed,
@@ -13,6 +14,7 @@ pub const quaternion = struct {
 
     pub fn init(allocator: std.mem.Allocator) !this {
         return quaternion{
+            .allocator = allocator,
             .x = try bigInt.Managed.init(allocator),
             .i = try bigInt.Managed.init(allocator),
             .j = try bigInt.Managed.init(allocator),
@@ -29,6 +31,7 @@ pub const quaternion = struct {
 
     pub fn uint(allocator: std.mem.Allocator) !this {
         return quaternion{
+            .allocator = allocator,
             .x = try bigInt.Managed.initSet(allocator, 1),
             .i = try bigInt.Managed.initSet(allocator, 0),
             .j = try bigInt.Managed.initSet(allocator, 0),
