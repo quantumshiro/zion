@@ -35,6 +35,14 @@ pub const quaternion = struct {
             .k = try bigInt.Managed.initSet(allocator, 0),
         };
     }
+
+    pub fn conjugate(self: *this) *quaternion {
+        self.i.negate();
+        self.j.negate();
+        self.k.negate();
+
+        return self;
+    }
 };
 
 test "quaternion init" {
@@ -74,4 +82,29 @@ test "quaternion uint" {
     try testing.expect(bigInt.Managed.eql(q.i, expect_zero));
     try testing.expect(bigInt.Managed.eql(q.j, expect_zero));
     try testing.expect(bigInt.Managed.eql(q.k, expect_zero));
+}
+
+test "quaternion conjugate" {
+    var q = try quaternion.init(std.testing.allocator);
+    defer q.deinit();
+
+    try q.x.set(1);
+    try q.i.set(2);
+    try q.j.set(3);
+    try q.k.set(4);
+
+    var expect = try quaternion.init(std.testing.allocator);
+    defer expect.deinit();
+
+    try expect.x.set(1);
+    try expect.i.set(-2);
+    try expect.j.set(-3);
+    try expect.k.set(-4);
+
+    const result = q.conjugate();
+
+    try testing.expect(bigInt.Managed.eql(result.x, expect.x));
+    try testing.expect(bigInt.Managed.eql(result.i, expect.i));
+    try testing.expect(bigInt.Managed.eql(result.j, expect.j));
+    try testing.expect(bigInt.Managed.eql(result.k, expect.k));
 }
