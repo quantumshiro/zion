@@ -101,10 +101,23 @@ test "quaternion conjugate" {
     try expect.j.set(-3);
     try expect.k.set(-4);
 
-    const result = q.conjugate();
+    var result = q.conjugate();
 
     try testing.expect(bigInt.Managed.eql(result.x, expect.x));
     try testing.expect(bigInt.Managed.eql(result.i, expect.i));
     try testing.expect(bigInt.Managed.eql(result.j, expect.j));
     try testing.expect(bigInt.Managed.eql(result.k, expect.k));
+
+    var expect2 = try quaternion.init(std.testing.allocator);
+    defer expect2.deinit();
+    try expect2.x.set(1);
+    try expect2.i.set(2);
+    try expect2.j.set(3);
+    try expect2.k.set(4);
+
+    result = q.conjugate();
+    try testing.expect(bigInt.Managed.eql(result.x, expect2.x));
+    try testing.expect(bigInt.Managed.eql(result.i, expect2.i));
+    try testing.expect(bigInt.Managed.eql(result.j, expect2.j));
+    try testing.expect(bigInt.Managed.eql(result.k, expect2.k));
 }
