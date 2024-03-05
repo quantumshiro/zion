@@ -11,6 +11,15 @@ pub const quaternion = struct {
 
     const this = @This();
 
+    pub fn init(allocator: std.mem.Allocator) !this {
+        return quaternion{
+            .x = try bigInt.Managed.init(allocator),
+            .i = try bigInt.Managed.init(allocator),
+            .j = try bigInt.Managed.init(allocator),
+            .k = try bigInt.Managed.init(allocator),
+        };
+    }
+
     pub fn deinit(self: *this) void {
         self.x.deinit();
         self.i.deinit();
@@ -28,7 +37,31 @@ pub const quaternion = struct {
     }
 };
 
-test "multi length quaternion" {
+test "quaternion init" {
+    var q = try quaternion.init(std.testing.allocator);
+    defer q.deinit();
+
+    try q.x.set(1);
+    try q.i.set(2);
+    try q.j.set(3);
+    try q.k.set(4);
+
+    var x = try bigInt.Managed.initSet(std.testing.allocator, 1);
+    var i = try bigInt.Managed.initSet(std.testing.allocator, 2);
+    var j = try bigInt.Managed.initSet(std.testing.allocator, 3);
+    var k = try bigInt.Managed.initSet(std.testing.allocator, 4);
+    defer x.deinit();
+    defer i.deinit();
+    defer j.deinit();
+    defer k.deinit();
+
+    try testing.expect(bigInt.Managed.eql(q.x, x));
+    try testing.expect(bigInt.Managed.eql(q.i, i));
+    try testing.expect(bigInt.Managed.eql(q.j, j));
+    try testing.expect(bigInt.Managed.eql(q.k, k));
+}
+
+test "quaternion uint" {
     var q = try quaternion.uint(std.testing.allocator);
     defer q.deinit();
 
